@@ -18,6 +18,7 @@ db_db = db_db
 
 app = Flask(__name__)
 
+
 class DecimalEncoder(json.JSONEncoder):
     ### subclassing json to handle a decimal return (match item entropy) from DB ###
     def _iterencode(self, o, markers=None):
@@ -80,7 +81,8 @@ def api_repo():
 def api_repo_filter():
     """Accepts filters to return more specific results for Repository table."""
     post_dict = request.get_json()
-    # {"num_res": 100, "page": 1, "repo_user": "ddd", "repo_name": "ccc", "repo_cloned": "yes", "repo_desc": "config"}
+    # {"num_res": 100, "page": 1, "repo_user": "ddd", "repo_name": "ccc", "repo_cloned": "yes", "repo_desc": "config",
+    # "repo_last_checked": "2020-01-01 12:33:33"}
     # Sanitizing the post_dict to only accept specific keys for filtering.
 
     if ("num_res" in post_dict) or \
@@ -88,8 +90,15 @@ def api_repo_filter():
             ("repo_user" in post_dict) or \
             ("repo_name" in post_dict) or \
             ("repo_cloned" in post_dict) or \
-            ("repo_desc" in post_dict):
+            ("repo_desc" in post_dict) or \
+            ("repo_last_checked" in post_dict):
         pd = {}
+        if ("repo_last_checked" in post_dict) and (isinstance(post_dict["repo_last_checked"], str) is True):
+            upd = {"repo_last_checked": post_dict["repo_last_checked"]}
+            pd.update(upd)
+        else:
+            upd = {"repo_last_checked": "1984-01-01 12:33:33"}
+            pd.update(upd)
         if ("num_res" in post_dict) and (isinstance(post_dict["num_res"], int) is True):
             upd = {"num_res": post_dict["num_res"]}
             pd.update(upd)
@@ -143,6 +152,7 @@ def api_repo_filter():
 3) repo_name - Name of the repository.
 4) repo_cloned - Whether the repo(s) being searched for were cloned locally or not due to size {"repo_cloned": "not_cloned"}
 5) repo_desc - Keywords to search for in the repository description {"repo_desc": "config"}
+6) repo_last_checked - Time since repo was last checked {"repo_last_checked": "1984-01-01 12:33:33"}
                         
 POST data example (at least one of these keys must be used):
  {
@@ -150,7 +160,8 @@ POST data example (at least one of these keys must be used):
  "repo_user": "<Username of the repository>", 
  "repo_name": "<Name of the repository>", 
  "repo_cloned": "<cloned|not_cloned>", 
- "repo_desc": "<text string to search for in the repository description>"
+ "repo_desc": "<text string to search for in the repository description>",
+ "repo_last_checked": "1984-01-01 12:33:33"
  }'''
         }
         resp = Response(json.dumps(invalid_post), status=400, mimetype='application/json')
@@ -158,7 +169,6 @@ POST data example (at least one of these keys must be used):
 
 
 def process_results(db_res, page, num_qry):
-
     results = {}
     r_list = []
     for r in db_res:
@@ -187,6 +197,7 @@ def process_results(db_res, page, num_qry):
     results = json.dumps(results)
     return results
 
+
 @app.route('/api/results')
 def api_results():
     """Get most recent 100 results of Search Results"""
@@ -196,6 +207,7 @@ def api_results():
     results = process_results(res, pg, qnum)
     resp = Response(results, status=200, mimetype='application/json')
     return resp
+
 
 def sanitize_post(post_params, filter_list):
     ### function [not currently in use] to streamline sanitation of posts ###
@@ -228,6 +240,7 @@ def sanitize_post(post_params, filter_list):
                 p_dict.update(upd)
     return p_dict, corr_filter
 
+
 @app.route('/api/results', methods=['POST'])
 def api_results_filter():
     """Accepts filters to return more specific results for Results table."""
@@ -241,8 +254,15 @@ def api_results_filter():
             ("match_line" in post_dict) or \
             ("match_update_type" in post_dict) or \
             ("match_author" in post_dict) or \
-            ("match_message" in post_dict):
+            ("match_message" in post_dict) or \
+            ("match_insert_time" in post_dict):
         pd = {}
+        if ("match_insert_time" in post_dict) and (isinstance(post_dict["match_insert_time"], str) is True):
+            upd = {"match_insert_time": post_dict["match_insert_time"]}
+            pd.update(upd)
+        else:
+            upd = {"match_insert_time": "1984-01-01 12:33:33"}
+            pd.update(upd)
         if ("num_res" in post_dict) and (isinstance(post_dict["num_res"], int) is True):
             upd = {"num_res": post_dict["num_res"]}
             pd.update(upd)
@@ -305,8 +325,8 @@ def api_results_filter():
 
     else:
         invalid_post = {
-        "error": "Invalid POST parameters passed in request.",
-        "helpString": '''Send a JSON object (Content-Type: application/json) with at least one of the following keys:
+            "error": "Invalid POST parameters passed in request.",
+            "helpString": '''Send a JSON object (Content-Type: application/json) with at least one of the following keys:
         1) page - Results are given in pages of 100.  {"page": 2} equals 101-200, {"page": 3} equals 201-300 and so on.
         2) match_type - String for type of match {"match_type": ["password", "username"]}
         3) match_string - A string to match the matched item {"match_string": "password"}
@@ -315,10 +335,11 @@ def api_results_filter():
         6) match_update_type - '+' for items added to the repo, '-' for items deleted. {"match_update_type": "-"}
         7) match_author - String for the author of the commit {"match_author": "johndoe"}
         8) match_message - String to match the commit message {"match_message": "credentials"}
+        9) match_update_time - String to match a datetime timestamp {"match_update_time": "2020-01-01 12:33:33"}
     
                 # {"num_res":33, "page": 2, "match_type": "Password", "match_string": "secret",
             # "match_location": "config", "match_line": "jdbc", "match_update_type": ["+","-"],
-            # "match_author": "John Doe", "match_message": "config"}
+            # "match_author": "John Doe", "match_message": "config", "match_update_time": "2020-01-01 12:33:33"}
     
         POST data example (at least one of these keys must be used):
          {
@@ -330,6 +351,7 @@ def api_results_filter():
          "match_update_type": ["+","-"] addition or deletion to/from repo,
          "match_author": "<commit author>", 
          "match_message": "<commit message>"
+         "match_update_time": "2020-01-01 12:33:33"
          }'''
         }
         resp = Response(json.dumps(invalid_post), status=400, mimetype='application/json')

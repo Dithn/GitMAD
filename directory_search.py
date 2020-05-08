@@ -116,6 +116,7 @@ class DirectorySearch:
                 authr = com_dict[key][0]
                 c_time = com_dict[key][1]
                 c_message = com_dict[key][3]
+                curr_file = "error_pulling_fname"
                 for item in com_dict[key][5:]:
                     if get_diff.match(item):
                         curr_file = item.split(' ')[3][1:]

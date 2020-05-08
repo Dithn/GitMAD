@@ -77,7 +77,7 @@ class DbOps:
                         repo_user=in_list[5],
                         repo_name=in_list[6],
                         repo_full_name=in_list[3],
-                        repo_updated__ts=in_list[9],
+                        repo_updated_ts=in_list[9],
                         repo_size=in_list[1],
                         repo_cloned=in_list[10],
                         repo_description=repo_d,
@@ -218,7 +218,7 @@ class DbOps:
             # handle filters and bring back appropriate results
             # Post Dict Example:
             # {"num_res":33, "page":2, "repo_user": "johndoe", "repo_name": "secretrepo",
-            # "repo_cloned": ["cloned", "not_cloned"], "repo_desc": "config"}
+            # "repo_cloned": ["cloned", "not_cloned"], "repo_desc": "config", "repo_last_checked": "2020-01-01 1:33:33"}
             page = post_dict['page']
             if page > 1:
                 offset = (page - 1) * 100
@@ -237,7 +237,7 @@ class DbOps:
                         r_info.c.repo_name.like(f'%{post_dict["repo_name"]}%'),
                         r_info.c.repo_cloned == post_dict["repo_cloned"],
                         r_info.c.repo_description.like(f'%{post_dict["repo_desc"]}%'),
-                        # r_info.c.repo_last_checked.like(f'%{r_chk}')
+                        r_info.c.repo_last_checked > post_dict["repo_last_checked"]
                     )
                 ).order_by(desc(r_info.c.repo_last_checked)).limit(
                     post_dict['num_res']).offset(offset)
@@ -253,7 +253,7 @@ class DbOps:
                         r_info.c.repo_name.like(f'%{post_dict["repo_name"]}%'),
                         r_info.c.repo_cloned.like(f'%{post_dict["repo_cloned"]}%'),
                         r_info.c.repo_description.like(f'%{post_dict["repo_desc"]}%'),
-                        # r_info.c.repo_last_checked.like(f'%{r_chk}')
+                        r_info.c.repo_last_checked > post_dict["repo_last_checked"]
                     )
                 ).order_by(desc(r_info.c.repo_last_checked)).limit(
                     post_dict['num_res']).offset(offset)
@@ -342,7 +342,7 @@ class DbOps:
             # Post Dict Example:
             # {"num_res":33, "page": 2, "match_type": "Password", "match_string": "secret",
             # "match_location": "config", "match_line": "jdbc", "match_update_type": ["+","-"],
-            # "match_author": "John Doe", "match_message": "config"}
+            # "match_author": "John Doe", "match_message": "config", "match_insert_time": "2020-01-01 12:33:33"}
             page = post_dict['page']
             if page > 1:
                 offset = (page - 1) * 100
@@ -361,7 +361,8 @@ class DbOps:
                     r_res.c.match_line.like(f'%{post_dict["match_line"]}%'),
                     r_res.c.match_update_type.like(f'%{post_dict["match_update_type"]}%'),
                     r_res.c.match_commit_author.like(f'%{post_dict["match_author"]}%'),
-                    r_res.c.match_commit_message.like(f'%{post_dict["match_message"]}%')
+                    r_res.c.match_commit_message.like(f'%{post_dict["match_message"]}%'),
+                    r_res.c.match_inserted > post_dict["match_insert_time"]
                 )
             ).order_by(desc(r_res.c.match_master_id))
 
@@ -378,7 +379,8 @@ class DbOps:
                     r_res.c.match_line.like(f'%{post_dict["match_line"]}%'),
                     r_res.c.match_update_type.like(f'%{post_dict["match_update_type"]}%'),
                     r_res.c.match_commit_author.like(f'%{post_dict["match_author"]}%'),
-                    r_res.c.match_commit_message.like(f'%{post_dict["match_message"]}%')
+                    r_res.c.match_commit_message.like(f'%{post_dict["match_message"]}%'),
+                    r_res.c.match_inserted > post_dict["match_insert_time"]
                 )
             ).order_by(desc(r_res.c.match_master_id)).limit(
                 post_dict['num_res']).offset(offset)

@@ -110,7 +110,7 @@ class Configure:
             db_host = input('Enter hostname or IP of database connection:')
             db_database = input('Enter name of database:')
             git_user = input('Enter Github username:')
-            git_pw = getpass.getpass('Enter Github password:')  # input('Enter Github password:')
+            git_pw = getpass.getpass('Enter Github \'personal token\':')  # input('Enter Github password:')
             directory = input('Enter working [data] directory:')
             proxy = input('Enter proxy host:port (127.0.0.1:3128).  Enter \'n\' for no proxy.')
             config['Database'] = {'User': db_user,

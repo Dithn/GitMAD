@@ -1,3 +1,5 @@
+# New development (2020)
+
 # GitMAD (Git Monitor, Alert, Discover)
 
 GitMAD is a full stack application that monitors Github for a given keyword(s) or domain. GitMAD searches code hosted on Github for a matching keyword. On finding a match, GitMAD will clone the repository and search through the files for a series of configurable regular expressions. GitMAD then takes those results and inserts them into a database for later viewing. These results can also be sent as email alerts. GitMAD runs continuously to discover new repositories matching the input keyword.
@@ -58,6 +60,7 @@ Send a JSON object (Content-Type: application/json) with at least one of the fol
 3) repo_name - Name of the repository.
 4) repo_cloned - Whether the repo(s) being searched for were cloned locally or not due to size {"repo_cloned": "not_cloned"}
 5) repo_desc - Keywords to search for in the repository description {"repo_desc": "config"}
+6) repo_last_checked - Time since repo was last checked {"repo_last_checked": "1984-01-01 12:33:33"}
                         
 POST data example (at least one of these keys must be used):
 ```python
@@ -69,13 +72,15 @@ Content-Type: application/json
  "repo_user": "<Username of the repository>", 
  "repo_name": "<Name of the repository>", 
  "repo_cloned": "<cloned|not_cloned>", 
- "repo_desc": "<text string to search for in the repository description>"
+ "repo_desc": "<text string to search for in the repository description>",
+ "repo_last_checked": "1984-01-01 12:33:33"
  }
 ```
 
 #### /api/results
 Allows a user to view either the first 100 most recent results, or to use various filters to search for a given match or set of matches.
 
+Of particular use will is the key "match_update_time", which searches for new findings since this time.
 
 A GET request with no parameters to /api/repos will return the 100 most recent results.
 ```python
@@ -94,7 +99,7 @@ Send a JSON object (Content-Type: application/json) with at least one of the fol
 6) match_update_type - '+' for items added to the repo, '-' for items deleted. {"match_update_type": "-"}
 7) match_author - String for the author of the commit {"match_author": "johndoe"}
 8) match_message - String to match the commit message {"match_message": "credentials"}
-                        
+9) match_update_time - String to match a datetime timestamp {"match_update_time": "2020-01-01 12:33:33"}                 
 POST data example (at least one of these keys must be used):
 ```python
 POST http://localhost:5000/api/repos
@@ -108,7 +113,8 @@ Content-Type: application/json
 "match_line": "<match something on the line of the initial match>", 
 "match_update_type": "<['+','-'] addition or deletion to/from repo>",
 "match_author": "<commit author>", 
-"match_message": "<commit message>"
+"match_message": "<commit message>",
+"match_update_time": "2020-01-01 12:33:33"
  }
 ```
 
@@ -118,6 +124,12 @@ Content-Type: application/json
 # Install
 
 GitMAD was originally written in Python3.6 on Windows.  It has also been tested on Ubuntu 18.04.
+
+## Github API Access
+
+A Personal Access Token is required to connect to the Github API.  See the link below on how to generate this:
+
+https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line
 
 ## Software Requirements
 Python 3.6+ (f-strings are used in this project, which requires Python 3.6)
@@ -178,7 +190,3 @@ https://github.com/deepdivesec/GitMAD/tree/master/GitMAD-install
 
 ## Known Issues
 * Sometimes the Github API will return 0 for the size of a repository, regardless of its size.  Due to the fact that a lot of the time these are significantly larger than the maximum size flag, a repository with size of 0 will not be downloaded.
-
-## Status 
-(10/2019) - Filtering in the Web Application has been enhanced and an API is being presently added.
-(11/2019) - API for Repositories and Matches has been added.
